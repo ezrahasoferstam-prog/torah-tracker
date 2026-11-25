@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#f6efdd">
+<title>מעקב כתיבת ספר תורה</title>
+<style>
+:root{
+  --parch:#f6efdd; --parch2:#efe4c8; --ink:#3a2c18; --ink2:#6b5636;
+  --gold:#b8860b; --gold2:#d4af37; --green:#2e7d32; --orange:#e07b00;
+  --red:#b3261e; --purple:#6a4fa3; --card:#fffdf6; --line:#e0d3ae;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:"Segoe UI",Arial,"Noto Sans Hebrew",sans-serif;background:var(--parch);color:var(--ink);min-height:100vh}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.35;
+  background:radial-gradient(ellipse at 20% 10%,#fff8 0,transparent 50%),radial-gradient(ellipse at 90% 90%,#d9c48f55 0,transparent 55%)}
+.wrap{max-width:480px;margin:0 auto;padding:14px 14px 90px;position:relative}
+h1{font-size:22px;text-align:center;margin:6px 0 2px;letter-spacing:.5px}
+.sub{text-align:center;color:var(--ink2);font-size:13px;margin-bottom:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px;box-shadow:0 1px 4px #0001}
+.btn{display:block;width:100%;border:none;border-radius:14px;padding:14px;font-size:17px;font-weight:700;cursor:pointer;text-align:center;font-family:inherit}
+.btn-gold{background:linear-gradient(160deg,var(--gold2),var(--gold));color:#fff;box-shadow:0 2px 8px #b8860b55}
+.btn-ghost{background:transparent;border:1.5px solid var(--line);color:var(--ink);font-weight:600;padding:11px;font-size:15px}
+.btn-small{width:auto;display:inline-block;padding:8px 14px;font-size:14px;border-radius:10px}
+.row{display:flex;gap:8px}.row>*{flex:1}
+.rings{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ring{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 6px;text-align:center}
+.ring svg{width:86px;height:86px}
+.ring .rt{font-size:14px;font-weight:700;margin-top:2px}
+.ring .rs{font-size:11.5px;color:var(--ink2);line-height:1.35}
+.posline{text-align:center;font-size:15px;margin:10px 0 4px}
+.posline b{color:var(--gold)}
+.chips{display:flex;gap:8px;margin-top:8px}
+.chipbtn{flex:1;background:var(--parch2);border:1px solid var(--line);border-radius:12px;padding:9px 4px;font-size:13px;cursor:pointer;text-align:center;font-family:inherit;color:var(--ink)}
+.chipbtn b{display:block;font-size:16px}
+.navbtns{display:flex;gap:8px;margin-top:10px}
+input,select{width:100%;padding:11px;border:1.5px solid var(--line);border-radius:12px;font-size:16px;background:#fff;color:var(--ink);font-family:inherit}
+label{font-size:13px;color:var(--ink2);display:block;margin:10px 0 4px;font-weight:600}
+.seg{display:flex;align-items:center;gap:8px;background:var(--parch2);border-radius:10px;padding:8px 10px;margin-top:8px;font-size:14px}
+.seg .x{margin-inline-start:auto;border:none;background:none;color:var(--red);font-size:18px;cursor:pointer}
+.muted{color:var(--ink2);font-size:13px}
+.back{display:inline-block;margin-bottom:10px;background:none;border:none;color:var(--gold);font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
+.map{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.sq{aspect-ratio:1;border-radius:8px;border:1.5px solid var(--line);background:#fff;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;color:var(--ink)}
+.sq.done{background:var(--green);color:#fff;border-color:var(--green)}
+.sq.part{background:var(--orange);color:#fff;border-color:var(--orange)}
+.sq.skip{background:var(--purple);color:#fff;border-color:var(--purple)}
+.legend{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;margin:8px 0}
+.legend span{display:flex;align-items:center;gap:4px}
+.dot{width:12px;height:12px;border-radius:4px;display:inline-block;border:1px solid var(--line)}
+.dot.done{background:var(--green)}.dot.part{background:var(--orange)}.dot.skip{background:var(--purple)}
+.colbar{display:flex;height:26px;border-radius:8px;overflow:hidden;border:1px solid var(--line);margin-top:6px}
+.colbar i{flex:1;border-inline-end:1px solid #0001}
+.colbar i.on{background:var(--green)}
+.colbar i.off{background:#fff}
+.colrow{margin-bottom:12px}
+.colrow .ct{font-size:14px;font-weight:700}
+.colrow .cs{font-size:12px;color:var(--ink2)}
+.pill{display:inline-block;background:var(--purple);color:#fff;border-radius:20px;padding:2px 10px;font-size:12px;font-weight:700}
+.warn{background:#fdf3e1;border:1px solid #ecd9a8;border-radius:12px;padding:10px;font-size:13px;margin-top:8px}
+.listitem{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px;font-size:14px}
+.histrow{display:flex;justify-content:space-between;align-items:center;font-size:13.5px;padding:8px 4px;border-bottom:1px dashed var(--line)}
+.histrow button{border:none;background:none;color:var(--red);cursor:pointer;font-size:15px}
+.footer{text-align:center;font-size:11px;color:var(--ink2);margin-top:16px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:24px;font-size:14px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:9}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<div class="toast" id="toast"></div>
+<script>
+"use strict";
+/* ===== מבנה הספר: רמ"ה עמודים, 62 יריעות (לפי הטבלה שנשלחה) ===== */
+const LINES_PER_COL = 42, TOTAL_COLS = 245;
+// יריעה 1: עמודים 1-3; יריעות 2-60: 4 עמודים; יריעות 61-62: 3 עמודים
+const SHEET_PARASHA = ["בראשית","נח","נח","לך לך","וירא","חיי שרה","תולדות","ויצא","ויצא","וישלח","וישב","מקץ","מקץ","ויגש","ויחי","שמות","וארא","בא","בא","בשלח","יתרו","משפטים","תרומה","תצוה","כי תשא","ויקהל","ויקהל","פקודי / ויקרא","ויקרא","צו","שמיני","תזריע / מצורע","אחרי מות","קדושים","אמור","בהר","בחוקתי","במדבר","נשא","נשא","בהעלותך","בהעלותך","שלח","קרח","חוקת","בלק","פינחס","מטות","מטות","מסעי","דברים","ואתחנן","עקב","ראה","ראה","שופטים","כי תצא","כי תצא","כי תבוא","נצבים","וילך (האזינו א׳)","וזאת הברכה (האזינו ב׳)"];
+function sheetCols(n){ // n=1..62 -> [firstCol, count]
+  if(n===1) return [1,3];
+  if(n<=60) return [4*n-4,4];
+  return n===61?[240,3]:[243,3];
+}
+function colSheet(c){ // column -> sheet number
+  if(c<=3) return 1;
+  if(c<=239) return Math.floor((c-4)/4)+2;
+  return c<=242?61:62;
+}
+/* ===== גימטריה למספרי עמודים ===== */
+function gem(n){
+  const U=["","א","ב","ג","ד","ה","ו","ז","ח","ט"],T=["","י","כ","ל","מ","נ","ס","ע","פ","צ"],H=["","ק","ר","ש","ת"];
+  let h=Math.floor(n/100), r=n%100, t=Math.floor(r/10), u=r%10, s="";
+  if(h)s+=H[h];
+  if(t===1&&(u===5||u===6)) s+=(u===5?"טו":"טז");
+  else s+=T[t]+U[u];
+  if(s.length>1) s=s.slice(0,-1)+"״"+s.slice(-1); else if(s) s+="׳";
+  return s;
+}
+/* ===== לוח עברי (אומת מול עוגנים: א׳ תשרי תשפ״ז=12.9.2026) ===== */
+const HEBREW_EPOCH=-1373428, RD_UNIX=719163;
+const HMONTHS=["תשרי","חשון","כסלו","טבת","שבט","אדר א׳","אדר","ניסן","אייר","סיוון","תמוז","אב","אלול"];
+function hLeap(y){return ((7*y+1)%19)<7;}
+function hYearDays(y){
+  const m=235*Math.floor((y-1)/19)+12*((y-1)%19)+Math.floor((7*((y-1)%19)+1)/19);
+  let p=204+793*(m%1080),h=5+12*m+793*Math.floor(m/1080)+Math.floor(p/1080),d=1+29*m+Math.floor(h/24);
+  p=1080*(h%24)+(p%1080);
+  if(p>=19440||(d%7===2&&p>=9924&&!hLeap(y))||(d%7===1&&p>=16789&&hLeap(y-1)))d++;
+  if(d%7===0||d%7===3||d%7===5)d++;
+  return d;
+}
+function hYearLen(y){return hYearDays(y+1)-hYearDays(y);}
+function hMonthLens(y){
+  const diy=hYearLen(y),leap=hLeap(y);
+  const L=leap?[30,29,30,29,30,30,29,30,29,30,29,30,29]:[30,29,30,29,30,29,30,29,30,29,30,29];
+  if(diy%10===5)L[1]=30; if(diy%10===3)L[2]=29; return L;
+}
+function hYearMonths(y){ // שמות לפי שנה (אדר בשנה פשוטה)
+  return hLeap(y)?HMONTHS:["תשרי","חשון","כסלו","טבת","שבט","אדר","ניסן","אייר","סיוון","תמוז","אב","אלול"];
+}
+function fixedFromH(y,m,d){const L=hMonthLens(y);let days=HEBREW_EPOCH+hYearDays(y)+d-1;for(let i=1;i<m;i++)days+=L[i-1];return days;}
+function hFromFixed(rd){
+  let y=Math.floor((rd-HEBREW_EPOCH)/366)+1;
+  while(rd>=fixedFromH(y+1,1,1))y++;
+  const L=hMonthLens(y);let m=1;
+  while(m<L.length&&rd>fixedFromH(y,m,L[m-1]))m++;
+  return {y,m,d:rd-fixedFromH(y,m,1)+1};
+}
+function rdOf(date){return RD_UNIX+Math.floor(Date.UTC(date.getFullYear(),date.getMonth(),date.getDate())/86400000);}
+function fmtISO(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function todayISO(){return fmtISO(new Date());}
+function hebrewLabel(date){const h=hFromFixed(rdOf(date));return h.d+" ב"+hYearMonths(h.y)[h.m-1]+" "+h.y;}
+/* ===== נתונים ===== */
+const LSKEY="torahTrackerV1";
+function defaultState(){return {
+  settings:{dailyGoal:42, weeklyGoalCols:4, monthlyGoalSheets:4, cycleType:"hebrew", writingDaysPerWeek:4, finalDeadline:""},
+  sessions:[], skippedSheets:[]
+};}
+let S=load();
+function load(){try{const s=JSON.parse(localStorage.getItem(LSKEY));if(s&&s.settings)return Object.assign(defaultState(),s);}catch(e){}return defaultState();}
+function save(){localStorage.setItem(LSKEY,JSON.stringify(S));}
+/* ===== כיסוי: כל השורות הכתובות, נגזר מהרישומים ===== */
+function coverage(){ // {col:[[from,to]...]} שורות 1-42, ממוזג
+  const cov={};
+  for(const ses of S.sessions) for(const g of ses.segs){
+    if(!cov[g.col])cov[g.col]=[];
+    cov[g.col].push([g.from,g.to]);
+  }
+  for(const c in cov) cov[c]=mergeRanges(cov[c]);
+  return cov;
+}
+function mergeRanges(rs){
+  rs=rs.slice().sort((a,b)=>a[0]-b[0]);
+  const out=[];
+  for(const [a,b] of rs){
+    if(out.length&&a<=out[out.length-1][1]+1) out[out.length-1][1]=Math.max(out[out.length-1][1],b);
+    else out.push([a,b]);
+  }
+  return out;
+}
+function colWritten(cov,c){return (cov[c]||[]).reduce((s,r)=>s+r[1]-r[0]+1,0);}
+function colMissing(cov,c){
+  const w=cov[c]||[];const out=[];let cur=1;
+  for(const [a,b] of w){ if(a>cur)out.push([cur,a-1]); cur=b+1; }
+  if(cur<=LINES_PER_COL)out.push([cur,LINES_PER_COL]);
+  return out;
+}
+function totalLines(cov){let t=0;for(const c in cov)t+=colWritten(cov,+c);return t;}
+function completeCols(cov){let t=0;for(let c=1;c<=TOTAL_COLS;c++)if(colWritten(cov,c)===LINES_PER_COL)t++;return t;}
+function furthest(cov){for(let c=TOTAL_COLS;c>=1;c--){const w=cov[c];if(w&&w.length)return {col:c,line:w[w.length-1][1]};}return null;}
+function openCols(cov){const out=[];for(const c in cov){const w=colWritten(cov,+c);if(w>0&&w<LINES_PER_COL)out.push(+c);}return out.sort((a,b)=>a-b);}
+/* מתי כל יריעה הושלמה בפועל (לפי תאריכי רישומים) */
+function sheetCompletionDates(){
+  const sessions=S.sessions.slice().sort((a,b)=>a.date<b.date?-1:1);
+  const cov={};const done={};
+  for(const ses of sessions){
+    for(const g of ses.segs){
+      if(!cov[g.col])cov[g.col]=[];
+      cov[g.col].push([g.from,g.to]);cov[g.col]=mergeRanges(cov[g.col]);
+    }
+    for(let n=1;n<=62;n++){
+      if(done[n])continue;
+      const [f,cnt]=sheetCols(n);let ok=true;
+      for(let c=f;c<f+cnt;c++){if(colWritten(cov,c)<LINES_PER_COL){ok=false;break;}}
+      if(ok)done[n]=ses.date;
+    }
+  }
+  return done;
+}
+/* עמודים מיוחדים מסומנים בטבלה */
+const SPECIAL_COLS={77:"שירת הים מתחילה כאן",242:"האזינו א׳",243:"האזינו ב׳"};
+function sheetStatus(cov,n){
+  const [f,cnt]=sheetCols(n);let w=0;
+  for(let c=f;c<f+cnt;c++)w+=colWritten(cov,c);
+  if(w===cnt*LINES_PER_COL)return "done";
+  if(w>0)return "part";
+  if(S.skippedSheets.includes(n))return "skip";
+  return "none";
+}
+/* ===== תקופות ===== */
+function weekRange(d){ // ראשון-שבת
+  const dow=d.getDay();const start=new Date(d);start.setDate(d.getDate()-dow);
+  const end=new Date(start);end.setDate(start.getDate()+6);
+  return [fmtISO(start),fmtISO(end)];
+}
+function monthRange(d){ // מחזור חודשי עברי או לועזי
+  if(S.settings.cycleType==="hebrew"){
+    const rd=rdOf(d),h=hFromFixed(rd),L=hMonthLens(h.y);
+    const s=fixedFromH(h.y,h.m,1),e=s+L[h.m-1]-1;
+    return [isoFromRd(s),isoFromRd(e),hYearMonths(h.y)[h.m-1]+" "+h.y];
+  }
+  const s=new Date(d.getFullYear(),d.getMonth(),1),e=new Date(d.getFullYear(),d.getMonth()+1,0);
+  return [fmtISO(s),fmtISO(e),(d.getMonth()+1)+"/"+d.getFullYear()];
+}
+function isoFromRd(rd){const d=new Date((rd-RD_UNIX)*86400000);return d.getUTCFullYear()+"-"+String(d.getUTCMonth()+1).padStart(2,"0")+"-"+String(d.getUTCDate()).padStart(2,"0");}
+function linesBetween(a,b){let t=0;for(const s of S.sessions)if(s.date>=a&&s.date<=b)t+=s.lines;return t;}
+function colsPerSheetAvg(){ // ממוצע עמודים ביריעה לצורך חישוב יעד חודשי
+  return 4;
+}
+/* ===== עזרי תצוגה ===== */
+function R(a,b){return a===b?String(a):`<span dir="ltr">${a}–${b}</span>`;}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.style.opacity=1;setTimeout(()=>t.style.opacity=0,2200);}
+function ringSVG(frac,color){
+  frac=Math.min(1,Math.max(0,frac));
+  const r=34,c=2*Math.PI*r,dash=frac*c;
+  return `<svg viewBox="0 0 86 86"><circle cx="43" cy="43" r="${r}" fill="none" stroke="#e8dcb8" stroke-width="9"/>
+  ${frac>0?`<circle cx="43" cy="43" r="${r}" fill="none" stroke="${color}" stroke-width="9" stroke-linecap="round" stroke-dasharray="${dash} ${c}" transform="rotate(-90 43 43)"/>`:""}
+  <text x="43" y="48" text-anchor="middle" font-size="17" font-weight="700" fill="#3a2c18">${Math.round(frac*100)}%</text></svg>`;
+}
+function nav(h){location.hash=h;}
+window.addEventListener("hashchange",render);
+/* ===== מסך בית ===== */
+function vHome(){
+  const cov=coverage(),today=todayISO(),d=new Date();
+  const [ws,we]=weekRange(d),[ms,me,mname]=monthRange(d);
+  const dayL=linesBetween(today,today),weekL=linesBetween(ws,we),monL=linesBetween(ms,me),totL=totalLines(cov);
+  const st=S.settings;
+  const weekGoal=st.weeklyGoalCols*LINES_PER_COL, bookGoal=TOTAL_COLS*LINES_PER_COL;
+  const f=furthest(cov),open=openCols(cov);
+  const skips=S.skippedSheets.filter(n=>sheetStatus(cov,n)!=="done");
+  // יריעות מושלמות — מול יעד מסירה חודשי (רק יריעות שהושלמו במחזור הנוכחי)
+  const doneDates=sheetCompletionDates();
+  const doneThisCycle=Object.values(doneDates).filter(dt=>dt>=ms&&dt<=me).length;
+  const doneTotal=Object.keys(doneDates).length;
+  const monGoalSheets=st.monthlyGoalSheets;
+  // כמה עבודה נשאר להשלמת היריעות הקרובות ליעד
+  let needLines=0,need=Math.max(0,monGoalSheets-doneThisCycle),cnt=0;
+  for(let n=1;n<=62&&cnt<need;n++){
+    const [sf,sc]=sheetCols(n);let miss=0;
+    for(let c=sf;c<sf+sc;c++)miss+=LINES_PER_COL-colWritten(cov,c);
+    if(miss>0){needLines+=miss;cnt++;}
+  }
+  const daysLeft=Math.max(0,Math.round((rdOf(new Date(me))-rdOf(d))));
+  const wdaysLeft=Math.max(1,Math.round(daysLeft*st.writingDaysPerWeek/7));
+  const perDay=Math.ceil(needLines/wdaysLeft);
+  // קצב לסיום הספר
+  let bookNote="";
+  if(st.finalDeadline){
+    const dl=new Date(st.finalDeadline+"T00:00:00");
+    const wks=(dl-d)/(7*86400000),left=bookGoal-totL;
+    bookNote=wks>0?`עד ${st.finalDeadline.split("-").reverse().join(".")}: נשארו ${left.toLocaleString()} שורות · צריך ~${Math.ceil(left/wks)} בשבוע`:"תאריך הסיום שבהגדרות עבר";
+  }
+  const cycleToggle=`<span style="font-size:11px">חודש: <a href="#" onclick="setCycle('hebrew');return false" style="color:${st.cycleType==="hebrew"?"var(--gold)":"var(--ink2)"};font-weight:${st.cycleType==="hebrew"?"700":"400"}">עברי</a> · <a href="#" onclick="setCycle('greg');return false" style="color:${st.cycleType==="greg"?"var(--gold)":"var(--ink2)"};font-weight:${st.cycleType==="greg"?"700":"400"}">לועזי</a></span>`;
+  document.getElementById("app").innerHTML=`
+  <h1>מעקב כתיבת ספר תורה</h1>
+  <div class="sub">${hebrewLabel(d)} · ${fmtISO(d).split("-").reverse().join(".")}</div>
+  <div class="rings">
+    <div class="ring">${ringSVG(dayL/st.dailyGoal,"#b8860b")}<div class="rt">היום — שורות עבודה</div><div class="rs">${dayL} מתוך ${st.dailyGoal} שורות</div></div>
+    <div class="ring">${ringSVG(weekL/weekGoal,"#2e7d32")}<div class="rt">השבוע — שורות עבודה</div><div class="rs">${weekL} מתוך ${weekGoal} שורות<br>(יעד: יריעה = ${st.weeklyGoalCols} עמודים כתיבה)</div></div>
+    <div class="ring">${ringSVG(doneThisCycle/monGoalSheets,"#6a4fa3")}<div class="rt">החודש — יריעות למסירה</div><div class="rs">${doneThisCycle} מתוך ${monGoalSheets} יריעות שהושלמו (${mname})<br>${need>0?`להשלמת היעד (לפי ${need} היריעות הקרובות שעוד לא הושלמו): עוד ${needLines} שורות · ~${perDay} ליום כתיבה`:"יעד המסירה הושלם 🎉"}<br>${cycleToggle}</div></div>
+    <div class="ring">${ringSVG(totL/bookGoal,"#8b0000")}<div class="rt">כל הספר</div><div class="rs">${totL.toLocaleString()} מתוך ${bookGoal.toLocaleString()} שורות<br>${completeCols(cov)} עמודים שלמים · ${doneTotal} יריעות מתוך 62</div></div>
+  </div>
+  ${bookNote?`<div class="warn">${bookNote}</div>`:""}
+  <div class="posline">${f?`המיקום הרחוק בספר: <b>עמוד ${gem(f.col)}</b> (${f.col}), שורה <b>${f.line}</b>`:"עוד לא נרשמה כתיבה"}</div>
+  <div class="chips">
+    <button class="chipbtn" onclick="nav('#open')"><b>${open.length}</b>עמודים פתוחים</button>
+    <button class="chipbtn" onclick="nav('#map')"><b>${skips.length}</b>יריעות שדולגו</button>
+  </div>
+  <div style="margin-top:12px"><button class="btn btn-gold" onclick="nav('#log')">✍️ רשום כתיבה</button></div>
+  <div class="navbtns">
+    <button class="btn-ghost" onclick="nav('#map')">מפת הספר</button>
+    <button class="btn-ghost" onclick="nav('#hist')">היסטוריה</button>
+    <button class="btn-ghost" onclick="nav('#settings')">הגדרות</button>
+  </div>
+  <div class="footer">245 עמודים · 42 שורות · 62 יריעות</div>`;
+}
+function setCycle(t){S.settings.cycleType=t;save();vHome();}
+/* ===== רישום כתיבה ===== */
+let draftSegs=[], draftDate=null;
+function vLog(){
+  if(!draftDate)draftDate=todayISO();
+  const cov=coverage(),f=furthest(cov);
+  document.getElementById("app").innerHTML=`
+  <button class="back" onclick="nav('')">‹ בית</button>
+  <h1>רישום כתיבה</h1>
+  <div class="sub">אפשר כמה קטעים ביום, מכל עמוד</div>
+  <div class="card">
+    <label>תאריך</label><input type="date" id="logdate" value="${draftDate}" onchange="draftDate=this.value">
+    <label>עמוד (1–245)</label><input type="number" id="segcol" min="1" max="245" inputmode="numeric" placeholder="למשל 100">
+    <div class="row">
+      <div><label>משורה</label><input type="number" id="segfrom" min="1" max="42" inputmode="numeric" placeholder="1"></div>
+      <div><label>עד שורה</label><input type="number" id="segto" min="1" max="42" inputmode="numeric" placeholder="20"></div>
+    </div>
+    <div style="margin-top:10px"><button class="btn-ghost" onclick="addSeg()">+ הוסף קטע</button></div>
+    <div id="seglist">${draftSegs.map((s,i)=>`<div class="seg">עמוד ${gem(s.col)} (${s.col}), שורות ${R(s.from,s.to)} · ${s.to-s.from+1} שורות <button class="x" onclick="draftSegs.splice(${i},1);vLog()">✕</button></div>`).join("")}</div>
+    ${draftSegs.length?`<div class="muted" style="margin-top:8px">סה״כ בקטעים: ${draftSegs.reduce((t,s)=>t+s.to-s.from+1,0)} שורות</div>`:""}
+  </div>
+  <button class="btn btn-gold" onclick="saveSession()">שמור רישום</button>
+  ${f?`<div class="muted" style="margin-top:8px;text-align:center">המיקום הרחוק כרגע: עמוד ${gem(f.col)} שורה ${f.line}</div>`:""}
+  <div class="warn">טיפ: כתיבה של 20 שורות מעמוד ק׳ ועוד 22 מעמוד קנ״ו נרשמת כשני קטעים — 42 שורות עבודה, ואף עמוד לא ייסגר בלי שכל 42 השורות שלו נכתבו.</div>`;
+  const ci=document.getElementById("segcol");
+  ci.addEventListener("change",()=>{ // השלמה חכמה: שורה ראשונה חסרה בעמוד
+    const c=+ci.value; if(c>=1&&c<=245){
+      const miss=colMissing(cov,c);
+      if(miss.length){document.getElementById("segfrom").value=miss[0][0];document.getElementById("segto").value=miss[0][1];}
+    }});
+}
+function addSeg(){
+  const col=+document.getElementById("segcol").value,from=+document.getElementById("segfrom").value,to=+document.getElementById("segto").value;
+  if(!col||col<1||col>245)return toast("מספר עמוד לא תקין");
+  if(!from||!to||from<1||to>42||from>to)return toast("טווח שורות לא תקין (1–42)");
+  draftSegs.push({col,from,to});vLog();
+}
+function saveSession(){
+  draftDate=document.getElementById("logdate").value||todayISO();
+  if(!draftSegs.length)return toast("לא נוספו קטעים");
+  const lines=draftSegs.reduce((t,s)=>t+s.to-s.from+1,0);
+  S.sessions.push({id:Date.now(),date:draftDate,segs:draftSegs.slice(),lines});
+  S.sessions.sort((a,b)=>a.date<b.date?-1:1);
+  draftSegs=[];save();toast("נשמר — "+lines+" שורות");nav("");
+}
+/* ===== עמודים פתוחים ===== */
+function vOpen(){
+  const cov=coverage(),open=openCols(cov);
+  document.getElementById("app").innerHTML=`
+  <button class="back" onclick="nav('')">‹ בית</button>
+  <h1>עמודים פתוחים</h1>
+  <div class="sub">עמודים שהתחילו ועוד לא הושלמו — כאן רואים בדיוק מה חסר</div>
+  ${open.length?open.map(c=>{
+    const miss=colMissing(cov,c),w=colWritten(cov,c);
+    return `<div class="listitem"><b>עמוד ${gem(c)} (${c})</b> · יריעה ${colSheet(c)} · נכתבו ${w} שורות<br>
+    <span class="muted">חסרות: ${miss.map(r=>R(r[0],r[1])).join(", ")}</span></div>`;
+  }).join(""):`<div class="card muted">אין עמודים פתוחים 🎉</div>`}`;
+}
+/* ===== מפת הספר ===== */
+function vMap(){
+  const cov=coverage();
+  let cells="";
+  for(let n=1;n<=62;n++){
+    const stt=sheetStatus(cov,n);
+    cells+=`<button class="sq ${stt==="none"?"":stt}" onclick="nav('#sheet/${n}')">${n}</button>`;
+  }
+  document.getElementById("app").innerHTML=`
+  <button class="back" onclick="nav('')">‹ בית</button>
+  <h1>מפת הספר — 62 יריעות</h1>
+  <div class="legend">
+    <span><i class="dot done"></i>הושלמה</span><span><i class="dot part"></i>חלקית</span>
+    <span><i class="dot skip"></i>דולגה, להשלמה</span><span><i class="dot"></i>לא נכתבה</span>
+  </div>
+  <div class="map">${cells}</div>`;
+}
+function vSheet(n){
+  const cov=coverage(),[f,cnt]=sheetCols(n),stt=sheetStatus(cov,n),skipped=S.skippedSheets.includes(n);
+  let colsHtml="";
+  for(let c=f;c<f+cnt;c++){
+    const w=cov[c]||[],miss=colMissing(cov,c),wn=colWritten(cov,c);
+    let bars="";
+    for(let l=1;l<=LINES_PER_COL;l++){
+      const on=w.some(r=>l>=r[0]&&l<=r[1]);
+      bars+=`<i class="${on?"on":"off"}"></i>`;
+    }
+    colsHtml+=`<div class="colrow"><div class="ct">עמוד ${gem(c)} (${c}) ${wn===LINES_PER_COL?"✅":wn?`· ${wn}/42`:""} ${SPECIAL_COLS[c]?`<span class="pill" style="background:#222">${SPECIAL_COLS[c]}</span>`:""}</div>
+    <div class="colbar">${bars}</div>
+    <div class="cs">${miss.length&&wn?("חסרות: "+miss.map(r=>R(r[0],r[1])).join(", ")):(wn===LINES_PER_COL?"הושלם":"טרם נכתב")}</div></div>`;
+  }
+  document.getElementById("app").innerHTML=`
+  <button class="back" onclick="nav('#map')">‹ מפת הספר</button>
+  <h1>יריעה ${n}</h1>
+  <div class="sub">פרשת ${SHEET_PARASHA[n-1]} · עמודים ${gem(f)}–${gem(f+cnt-1)} ${stt==="skip"?'<span class="pill">דולגה — להשלמה</span>':""}</div>
+  <div class="card">${colsHtml}</div>
+  <button class="btn ${skipped?"":"btn-gold"}" style="${skipped?"background:#eee;color:#333":""}" onclick="toggleSkip(${n})">${skipped?"בטל סימון דילוג":"סמן כדולגה — להשלמה"}</button>
+  <div class="muted" style="margin-top:8px;text-align:center">יריעה שדולגה תופיע במפה ובבית עד שתושלם.</div>`;
+}
+function toggleSkip(n){
+  const i=S.skippedSheets.indexOf(n);
+  if(i>=0)S.skippedSheets.splice(i,1);else S.skippedSheets.push(n);
+  save();vSheet(n);
+}
+/* ===== היסטוריה ===== */
+function vHist(){
+  const rows=S.sessions.slice().reverse();
+  document.getElementById("app").innerHTML=`
+  <button class="back" onclick="nav('')">‹ בית</button>
+  <h1>היסטוריית רישומים</h1>
+  <div class="card">${rows.length?rows.map(s=>`<div class="histrow"><span><b>${s.date.split("-").reverse().join(".")}</b> · ${s.lines} שורות · ${s.segs.map(g=>`עמ׳ ${g.col}: ${R(g.from,g.to)}`).join(" + ")}</span><button onclick="delSession(${s.id})">🗑</button></div>`).join(""):'<span class="muted">אין רישומים עדיין</span>'}</div>`;
+}
+function delSession(id){
+  if(!confirm("למחוק את הרישום? השורות יורדו מהכיסוי."))return;
+  S.sessions=S.sessions.filter(s=>s.id!==id);save();vHist();
+}
+/* ===== הגדרות ===== */
+function vSettings(){
+  const st=S.settings;
+  document.getElementById("app").innerHTML=`
+  <button class="back" onclick="nav('')">‹ בית</button>
+  <h1>הגדרות</h1>
+  <div class="card">
+    <label>יעד יומי (שורות)</label><input type="number" id="sdaily" value="${st.dailyGoal}" min="1">
+    <label>יעד שבועי (עמודים — יריעה = 4)</label><input type="number" id="sweekly" value="${st.weeklyGoalCols}" min="1">
+    <label>יעד חודשי (יריעות)</label><input type="number" id="smonthly" value="${st.monthlyGoalSheets}" min="1">
+    <label>ימי כתיבה בשבוע (לחישוב קצב)</label><input type="number" id="swdays" value="${st.writingDaysPerWeek}" min="1" max="7">
+    <label>מחזור חודשי</label>
+    <select id="scycle"><option value="hebrew" ${st.cycleType==="hebrew"?"selected":""}>עברי — מראש חודש</option><option value="greg" ${st.cycleType==="greg"?"selected":""}>לועזי — מה־1 בחודש</option></select>
+    <label>תאריך סיום יעד לכל הספר (לא חובה)</label><input type="date" id="sdead" value="${st.finalDeadline}">
+    <div style="margin-top:12px"><button class="btn btn-gold" onclick="saveSettings()">שמור הגדרות</button></div>
+  </div>
+  <div class="card">
+    <b>גיבוי ושחזור</b>
+    <div class="muted" style="margin:4px 0 10px">הנתונים נשמרים בטלפון. מומלץ לגבות מדי פעם.</div>
+    <div class="row">
+      <button class="btn-ghost" onclick="backup()">⬇️ גיבוי</button>
+      <button class="btn-ghost" onclick="document.getElementById('restorefile').click()">⬆️ שחזור</button>
+    </div>
+    <input type="file" id="restorefile" accept=".json" style="display:none" onchange="restore(event)">
+    <div style="margin-top:10px"><button class="btn-ghost" style="color:var(--red)" onclick="resetAll()">איפוס מלא</button></div>
+  </div>
+  <div class="footer">מבנה: רמ״ה עמודים × 42 שורות · חלוקת יריעות לפי הטבלה שנשלחה</div>`;
+}
+function saveSettings(){
+  const g=id=>document.getElementById(id).value;
+  S.settings.dailyGoal=+g("sdaily")||42;
+  S.settings.weeklyGoalCols=+g("sweekly")||4;
+  S.settings.monthlyGoalSheets=+g("smonthly")||4;
+  S.settings.writingDaysPerWeek=Math.min(7,Math.max(1,+g("swdays")||4));
+  S.settings.cycleType=g("scycle");
+  S.settings.finalDeadline=g("sdead");
+  save();toast("ההגדרות נשמרו");nav("");
+}
+/* ===== גיבוי / שחזור / איפוס ===== */
+function backup(){
+  const blob=new Blob([JSON.stringify(S,null,1)],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="torah-backup-"+todayISO()+".json";a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+}
+function restore(ev){
+  const f=ev.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{try{
+    const s=JSON.parse(r.result);
+    if(!s.settings||!Array.isArray(s.sessions))throw 0;
+    S=Object.assign(defaultState(),s);save();toast("שוחזר בהצלחה");nav("");
+  }catch(e){toast("קובץ לא תקין");}};
+  r.readAsText(f);
+}
+function resetAll(){if(confirm("למחוק את כל הנתונים?")){S=defaultState();save();nav("");}}
+/* ===== ניתוב ===== */
+function render(){
+  const h=location.hash.replace(/^#/,"");
+  if(h.startsWith("sheet/"))return vSheet(+h.split("/")[1]);
+  if(h==="log")return vLog();
+  if(h==="open")return vOpen();
+  if(h==="map")return vMap();
+  if(h==="hist")return vHist();
+  if(h==="settings")return vSettings();
+  vHome();
+}
+render();
+</script>
+</body>
+</html>
