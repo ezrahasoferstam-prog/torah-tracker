@@ -50,6 +50,7 @@ label{font-size:13px;color:var(--ink2);display:block;margin:10px 0 4px;font-weig
 .sq.done{background:var(--green);color:#fff;border-color:var(--green)}
 .sq.part{background:var(--orange);color:#fff;border-color:var(--orange)}
 .sq.skip{background:var(--purple);color:#fff;border-color:var(--purple)}
+.sq.sel{outline:3px solid var(--gold);outline-offset:1px;background:#f3e3a6}
 .legend{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;margin:8px 0}
 .legend span{display:flex;align-items:center;gap:4px}
 .dot{width:12px;height:12px;border-radius:4px;display:inline-block;border:1px solid var(--line)}
@@ -285,6 +286,7 @@ function vHome(){
     <button class="btn-ghost" onclick="nav('#hist')">היסטוריה</button>
     <button class="btn-ghost" onclick="nav('#settings')">הגדרות</button>
   </div>
+  <div class="navbtns"><button class="btn-ghost" onclick="nav('#prior')">📜 סמן יריעות שכבר נכתבו לפני המעקב</button></div>
   <div class="footer">245 עמודים · 42 שורות · 62 יריעות</div>`;
 }
 function setCycle(t){S.settings.cycleType=t;save();vHome();}
@@ -360,7 +362,8 @@ function vMap(){
     <span><i class="dot done"></i>הושלמה</span><span><i class="dot part"></i>חלקית</span>
     <span><i class="dot skip"></i>דולגה, להשלמה</span><span><i class="dot"></i>לא נכתבה</span>
   </div>
-  <div class="map">${cells}</div>`;
+  <div class="map">${cells}</div>
+  <div style="margin-top:14px"><button class="btn-ghost" onclick="nav('#prior')">📜 סמן כמה יריעות שכבר נכתבו</button></div>`;
 }
 function vSheet(n){
   const cov=coverage(),[f,cnt]=sheetCols(n),stt=sheetStatus(cov,n),skipped=S.skippedSheets.includes(n);
@@ -389,17 +392,68 @@ function toggleSkip(n){
   if(i>=0)S.skippedSheets.splice(i,1);else S.skippedSheets.push(n);
   save();vSheet(n);
 }
+/* ===== יריעות שנכתבו לפני תחילת המעקב ===== */
+const PRIOR_DATE="0000-00-00"; // בלי יום כתיבה: נספר בספר, לא ביום/שבוע/חודש
+let priorSel=new Set();
+function vPrior(){
+  const cov=coverage();let cells="";
+  for(let n=1;n<=62;n++){
+    const stt=sheetStatus(cov,n);
+    cells+=`<button class="sq ${stt==="done"?"done":(priorSel.has(n)?"sel":"")}" ${stt==="done"?"disabled style='opacity:.6'":`onclick="priorTog(${n})"`}>${n}</button>`;
+  }
+  document.getElementById("app").innerHTML=`
+  <button class="back" onclick="nav('')">‹ בית</button>
+  <h1>יריעות שנכתבו לפני המעקב</h1>
+  <div class="sub">סמן כמה יריעות בבת אחת. הן ייחשבו ככתובות במלואן, בלי יום כתיבה, ולא ייספרו ביעד היום, השבוע או החודש.</div>
+  <div class="card">
+    <label style="margin-top:0">בחירת טווח יריעות</label>
+    <div class="row"><input type="number" id="prfrom" min="1" max="62" inputmode="numeric" placeholder="מיריעה"><input type="number" id="prto" min="1" max="62" inputmode="numeric" placeholder="עד יריעה"></div>
+    <div class="row" style="margin-top:8px"><button class="btn-ghost" onclick="priorRange()">+ הוסף טווח</button><button class="btn-ghost" onclick="priorSel=new Set();vPrior()">נקה בחירה</button></div>
+  </div>
+  <div class="map">${cells}</div>
+  <div class="legend"><span><i class="dot done"></i>כבר כתובה</span><span><i class="dot" style="background:#f3e3a6"></i>נבחרה עכשיו</span></div>
+  <div class="card" style="margin-top:10px"><b>נבחרו ${priorSel.size} יריעות</b>
+  <div class="muted">${priorSel.size?[...priorSel].sort((a,b)=>a-b).join(", ")+" · "+[...priorSel].reduce((t,n)=>t+sheetCols(n)[1],0)+" עמודים":"לחץ על מספרי יריעות לבחירה"}</div></div>
+  <button class="btn btn-gold" onclick="priorSave()">סמן ${priorSel.size||""} כנכתבו</button>
+  <div class="muted" style="margin-top:8px;text-align:center">אפשר לבטל בכל רגע מההיסטוריה (🗑). יריעה שדולגה וסומנה כאן תוסר מרשימת הדילוגים.</div>`;
+}
+function priorTog(n){priorSel.has(n)?priorSel.delete(n):priorSel.add(n);vPrior();}
+function priorRange(){
+  const a=parseInt(document.getElementById("prfrom").value,10),b=parseInt(document.getElementById("prto").value,10);
+  if(!(a>=1&&a<=62&&b>=1&&b<=62))return toast("מספרי יריעות בין 1 ל־62");
+  if(a>b)return toast("ה״מיריעה״ צריכה להיות קטנה מה״עד יריעה״");
+  for(let n=a;n<=b;n++)priorSel.add(n);vPrior();
+}
+function priorSave(){
+  if(!priorSel.size)return toast("לא נבחרו יריעות");
+  const cov=coverage(),segs=[];
+  for(const n of [...priorSel].sort((a,b)=>a-b)){
+    const [f,cnt]=sheetCols(n);
+    for(let c=f;c<f+cnt;c++)for(const [a,b] of colMissing(cov,c))segs.push({col:c,from:a,to:b});
+  }
+  if(!segs.length)return toast("הכול כבר נכתב");
+  const lines=segs.reduce((t,g)=>t+g.to-g.from+1,0);
+  if(!confirm("לסמן "+priorSel.size+" יריעות ("+lines+" שורות) ככתובות לפני המעקב?"))return;
+  const unskipped=S.skippedSheets.filter(n=>priorSel.has(n));
+  S.sessions.push({id:Date.now(),date:PRIOR_DATE,prior:true,segs,lines,unskipped});
+  S.sessions.sort((a,b)=>a.date<b.date?-1:1);
+  S.skippedSheets=S.skippedSheets.filter(n=>!priorSel.has(n));
+  priorSel=new Set();save();toast("סומנו "+lines+" שורות");nav("");
+}
 /* ===== היסטוריה ===== */
 function vHist(){
   const rows=S.sessions.slice().reverse();
   document.getElementById("app").innerHTML=`
   <button class="back" onclick="nav('')">‹ בית</button>
   <h1>היסטוריית רישומים</h1>
-  <div class="card">${rows.length?rows.map(s=>`<div class="histrow"><span><b>${s.date.split("-").reverse().join(".")}</b> · ${s.lines} שורות · ${s.segs.map(g=>`עמ׳ ${g.col}: ${R(g.from,g.to)}`).join(" + ")}</span><button onclick="delSession(${s.id})">🗑</button></div>`).join(""):'<span class="muted">אין רישומים עדיין</span>'}</div>`;
+  <div class="card">${rows.length?rows.map(s=>`<div class="histrow"><span><b>${s.prior?"לפני המעקב":s.date.split("-").reverse().join(".")}</b> · ${s.lines} שורות · ${s.prior?(new Set(s.segs.map(g=>colSheet(g.col))).size+" יריעות"):s.segs.map(g=>`עמ׳ ${g.col}: ${R(g.from,g.to)}`).join(" + ")}</span><button onclick="delSession(${s.id})">🗑</button></div>`).join(""):'<span class="muted">אין רישומים עדיין</span>'}</div>`;
 }
 function delSession(id){
   if(!confirm("למחוק את הרישום? השורות יורדו מהכיסוי."))return;
-  S.sessions=S.sessions.filter(s=>s.id!==id);save();vHist();
+  const gone=S.sessions.find(s=>s.id===id);
+  S.sessions=S.sessions.filter(s=>s.id!==id);
+  if(gone&&gone.unskipped){const cov=coverage();for(const n of gone.unskipped)if(sheetStatus(cov,n)!=="done"&&!S.skippedSheets.includes(n))S.skippedSheets.push(n);}
+  save();vHist();
 }
 /* ===== הגדרות ===== */
 function vSettings(){
@@ -465,6 +519,7 @@ function render(){
   if(h==="log")return vLog();
   if(h==="open")return vOpen();
   if(h==="map")return vMap();
+  if(h==="prior")return vPrior();
   if(h==="hist")return vHist();
   if(h==="settings")return vSettings();
   vHome();
